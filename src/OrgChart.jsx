@@ -1,119 +1,95 @@
-import { ReactFlowProvider, useNodesState } from 'reactflow';
-import { flextree } from 'd3-flextree';
+/* eslint-disable no-mixed-spaces-and-tabs */
+import ReactFlow, { ReactFlowProvider, useNodesState } from 'reactflow';
 import { Button } from 'antd';
-import ReactFlow from 'reactflow';
-
-import 'reactflow/dist/style.css';
 import { useState } from 'react';
 
-const initialNodes = [
-	{ id: '1', position: { x: 0, y: 0 }, data: { label: '1' } },
-	{ id: '2', position: { x: 0, y: 100 }, data: { label: '2' } }
-];
+import 'reactflow/dist/style.css';
 
-const initialEdges = [{ id: 'e1-2', source: '1', target: '2' }];
+import simpleData from './data/simpleData';
+import { calcVerticalNode, getNodesList } from './utils/convert';
+import { ORG_TYPE } from './constants/reactflow';
+import { flattenArray } from './utils/common';
 
-const data = {
-	id: 'HDQT',
-	data: { label: 'HDQT' },
-	children: [
-		{
-			id: 'BKS',
-			data: { label: 'BKS' }
-		},
-		{
-			id: 'BGD',
-			data: { label: 'BGD' },
-			children: [
-				{
-					id: 'PB1',
-					data: { label: 'PB1' },
-					children: [
-						{
-							id: 'PB1.1',
-							data: { label: 'PB1.1' }
-						},
-						{
-							id: 'PB1.2',
-							data: { label: 'PB1.2' }
-						},
-						{
-							id: 'PB1.3',
-							data: { label: 'PB1.3' }
-						}
-					]
-				},
-				{
-					id: 'PB2',
-					data: { label: 'PB2' }
-				},
-				{
-					id: 'PB3',
-					data: { label: 'PB3' }
-				}
-			]
-		}
-	]
-};
+// Mỗi node có children chia theo chiều đọc cần được tính là 1 node lớn
+// Tính size của node lơn bằng cách đếm độ sâu -> Tính width, height
+// Apply vào d3-treeflex từ root (HDQT)
 
 const OrgChart = () => {
 	const [nodesData, setNodesData] = useState([]);
 
 	const [nodes, setNodes, onChangeNodes] = useNodesState([]);
 
-	const layout = flextree();
-	const tree = layout.spacing(60).nodeSize([200, 100]).hierarchy(data);
-
 	return (
 		<ReactFlowProvider>
 			<div style={{ width: '100vw', height: '100vh' }}>
 				<Button
 					onClick={() => {
-						console.log(tree);
-					}}
-				>
-					tree
-				</Button>
-				<Button
-					onClick={() => {
-						console.log(layout(tree));
-					}}
-				>
-					layout
-				</Button>
-				<Button
-					onClick={() => {
-						layout(tree).each((node) =>
-							setNodesData((prev) => [...prev, node])
-						);
+						let arr = [];
+						getNodesList(simpleData, ORG_TYPE.VERTICAL).each((node) => {
+							console.log('🚀 ~ getNodesList ~ node:', node);
+
+							arr = [
+								...arr,
+								{
+									...node,
+									...node.data,
+									position: { x: node.x + 500, y: node.y + 100 }
+								}
+							];
+							// setNodes((prev) => {
+							// 	return [
+							// 		...prev,
+							// 		{
+							// 			...node,
+							// 			...node.data,
+							// 			position: {
+							// 				x: node.x + 500,
+							// 				y: node.y + 100
+							// 			}
+							// 		}
+							// 	];
+							// });
+						});
 					}}
 				>
 					nodesData
 				</Button>
 				<Button
 					onClick={() => {
-						setNodes(
-							nodesData.map((item, index) => ({
-								...item,
-								...item.data,
-								position: {
-									x: item.x + 500,
-									y: item.y + 100
-								}
-							}))
+						console.log(
+							flattenArray(
+								nodes
+									.filter((item) => item.isSubRoot)
+									.map((item) =>
+										calcVerticalNode(item, item?.position?.x, item?.position?.y)
+									)
+							)
 						);
-					}}
-				>
-					setNodes
-				</Button>
-				<Button
-					onClick={() => {
-						console.log(tree.x);
 					}}
 				>
 					nodes
 				</Button>
-				<ReactFlow nodes={nodes} edges={[]} />
+				<ReactFlow
+					nodes={
+						nodes?.length
+							? [
+									...nodes,
+									...flattenArray(
+										nodes
+											.filter((item) => item.isSubRoot)
+											.map((item) =>
+												calcVerticalNode(
+													item,
+													item?.position?.x,
+													item?.position?.y
+												)
+											)
+									).filter((item) => !item.data.isSubRoot)
+							  ]
+							: []
+					}
+					edges={[]}
+				/>
 			</div>
 		</ReactFlowProvider>
 	);
