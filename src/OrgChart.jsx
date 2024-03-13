@@ -1,119 +1,46 @@
-import { ReactFlowProvider, useNodesState } from 'reactflow';
-import { flextree } from 'd3-flextree';
-import { Button } from 'antd';
-import ReactFlow from 'reactflow';
-
-import 'reactflow/dist/style.css';
+/* eslint-disable no-mixed-spaces-and-tabs */
+import ReactFlow, { ReactFlowProvider, useNodesState } from 'reactflow';
+import { Button, Select } from 'antd';
 import { useState } from 'react';
 
-const initialNodes = [
-	{ id: '1', position: { x: 0, y: 0 }, data: { label: '1' } },
-	{ id: '2', position: { x: 0, y: 100 }, data: { label: '2' } }
-];
+import 'reactflow/dist/style.css';
 
-const initialEdges = [{ id: 'e1-2', source: '1', target: '2' }];
+import simpleData from './data/simpleData';
+import { getNodesList } from './utils/convert';
+import { ORG_TYPE } from './constants/reactflow';
+import { flattenArray } from './utils/common';
 
-const data = {
-	id: 'HDQT',
-	data: { label: 'HDQT' },
-	children: [
-		{
-			id: 'BKS',
-			data: { label: 'BKS' }
-		},
-		{
-			id: 'BGD',
-			data: { label: 'BGD' },
-			children: [
-				{
-					id: 'PB1',
-					data: { label: 'PB1' },
-					children: [
-						{
-							id: 'PB1.1',
-							data: { label: 'PB1.1' }
-						},
-						{
-							id: 'PB1.2',
-							data: { label: 'PB1.2' }
-						},
-						{
-							id: 'PB1.3',
-							data: { label: 'PB1.3' }
-						}
-					]
-				},
-				{
-					id: 'PB2',
-					data: { label: 'PB2' }
-				},
-				{
-					id: 'PB3',
-					data: { label: 'PB3' }
-				}
-			]
-		}
-	]
-};
+// Mỗi node có children chia theo chiều đọc cần được tính là 1 node lớn
+// Tính size của node lơn bằng cách đếm độ sâu -> Tính width, height
+// Apply vào d3-treeflex từ root (HDQT)
 
 const OrgChart = () => {
-	const [nodesData, setNodesData] = useState([]);
+	const [type, setType] = useState(ORG_TYPE.HORIZONTAL);
 
 	const [nodes, setNodes, onChangeNodes] = useNodesState([]);
-
-	const layout = flextree();
-	const tree = layout.spacing(60).nodeSize([200, 100]).hierarchy(data);
 
 	return (
 		<ReactFlowProvider>
 			<div style={{ width: '100vw', height: '100vh' }}>
 				<Button
 					onClick={() => {
-						console.log(tree);
+						setNodes(getNodesList(simpleData, type));
 					}}
 				>
-					tree
+					Render
 				</Button>
-				<Button
-					onClick={() => {
-						console.log(layout(tree));
+				<Select
+					value={type}
+					onChange={(value) => {
+						setType(value);
 					}}
-				>
-					layout
-				</Button>
-				<Button
-					onClick={() => {
-						layout(tree).each((node) =>
-							setNodesData((prev) => [...prev, node])
-						);
-					}}
-				>
-					nodesData
-				</Button>
-				<Button
-					onClick={() => {
-						setNodes(
-							nodesData.map((item, index) => ({
-								...item,
-								...item.data,
-								position: {
-									x: item.x + 500,
-									y: item.y + 100
-								}
-							}))
-						);
-					}}
-				>
-					setNodes
-				</Button>
-				<Button
-					onClick={() => {
-						console.log(tree.x);
-					}}
-				>
-					nodes
-				</Button>
-				<ReactFlow nodes={nodes} edges={[]} />
+					options={[
+						{ label: 'Ngang', value: ORG_TYPE.HORIZONTAL },
+						{ label: 'Dọc', value: ORG_TYPE.VERTICAL }
+					]}
+				/>
+
+				<ReactFlow nodes={nodes?.length ? nodes : []} edges={[]} />
 			</div>
 		</ReactFlowProvider>
 	);

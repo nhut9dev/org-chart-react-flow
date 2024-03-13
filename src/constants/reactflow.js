@@ -1,0 +1,10 @@
+const ORG_TYPE = {
+	HORIZONTAL: 'HORIZONTAL',
+	VERTICAL: 'VERTICAL'
+};
+
+const COMMON = {
+	SPACING: 70
+};
+
+export { ORG_TYPE, COMMON };
