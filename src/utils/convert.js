@@ -70,6 +70,43 @@ const calcVerticalD3Tree = (node, subRoots) => {
 	};
 };
 
+const calcSubRoot = (node, x = 0, y = 0, depth = 0) => {
+	const newX = x + NODE.WIDTH / 6;
+	const newY = y + NODE.HEIGHT * depth;
+
+	let childrenDeep = 1;
+
+	if (!node) {
+		return null;
+	}
+
+	return {
+		...node,
+		position: {
+			x: newX,
+			y: newY
+		},
+		...(node?.data ? {} : { data: { ...node, label: node.name } }),
+		...(node?.children || node?.data?.children
+			? {
+					children: (node?.children || node?.data?.children || []).map(
+						(item, index) => {
+							const prevObj = flattenArray([
+								(node?.data?.children || node?.children)?.[index - 1]
+							]);
+
+							if (prevObj?.[0]) {
+								childrenDeep += prevObj.length;
+							}
+
+							return calcSubRoot(item, newX, newY, childrenDeep);
+						}
+					)
+			  }
+			: {})
+	};
+};
+
 const getNodesList = (data, type = ORG_TYPE.VERTICAL) => {
 	const d3FlexTree = flextree();
 	let arr = [];
@@ -85,7 +122,11 @@ const getNodesList = (data, type = ORG_TYPE.VERTICAL) => {
 		return convertToReactFlowData(arr);
 	}
 
+	// vertical
+	let arrVertical = [];
 	const horizontal = findHorizontal(data);
+	const d3vertical = flextree();
+	const subRoots = findSubRoot(data);
 
 	const tree = d3FlexTree
 		.spacing(COMMON.SPACING)
@@ -96,11 +137,6 @@ const getNodesList = (data, type = ORG_TYPE.VERTICAL) => {
 		arr = [...arr, node];
 	});
 
-	const d3vertical = flextree();
-	let arrVertical = [];
-
-	const subRoots = findSubRoot(data);
-
 	const treeVertical = d3vertical
 		.spacing(COMMON.SPACING)
 		.hierarchy(calcVerticalD3Tree(data, subRoots));
@@ -108,8 +144,6 @@ const getNodesList = (data, type = ORG_TYPE.VERTICAL) => {
 	d3vertical(treeVertical).each((node) => {
 		arrVertical = [...arrVertical, node];
 	});
-
-	console.log('🚀 ~ d3vertical ~ arrVertical:', arrVertical);
 
 	const nodes = convertToReactFlowData(arrVertical).map((item) => {
 		const sub = subRoots.find((n) => n.id === item.data.id);
@@ -123,9 +157,17 @@ const getNodesList = (data, type = ORG_TYPE.VERTICAL) => {
 		};
 	});
 
-	console.log(nodes);
+	const subNodes = nodes.filter((item) => item.data.isSubRoot);
 
-	return nodes;
+	return [
+		...nodes,
+		...subNodes
+			.map((item) =>
+				flattenArray([calcSubRoot(item, item.position.x, item.position.y, 0)])
+			)
+			.flat()
+			.filter((item) => !item.data.isSubRoot)
+	];
 };
 
 export { getNodesList };
