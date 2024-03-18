@@ -4,7 +4,6 @@ import { flextree } from 'd3-flextree';
 import { COMMON, ORG_TYPE } from '../constants/reactflow';
 import NODE from '../constants/node';
 import { flattenArray } from './common';
-import { withInfo } from 'antd/es/modal/confirm';
 
 const convertToReactFlowData = (arr) => {
 	return arr.map((node) => {
@@ -114,7 +113,7 @@ const getNodesList = (data, type = ORG_TYPE.VERTICAL) => {
 	if (type === ORG_TYPE.HORIZONTAL) {
 		const tree = d3FlexTree
 			.spacing(COMMON.SPACING)
-			.nodeSize([NODE.WIDTH, NODE.HEIGHT])
+			.nodeSize([NODE.WIDTH, NODE.HEIGHT + 30])
 			.hierarchy(data);
 		d3FlexTree(tree).each((node) => {
 			arr = [...arr, node];

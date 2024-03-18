@@ -87,7 +87,7 @@ const simpleData = {
 				}
 			]
 		},
-		{ id: 'HQDT-lv1.2', name: 'HDQT-lv1.2' }
+		{ id: 'HDQT-lv1.2', name: 'HDQT-lv1.2' }
 	]
 };
 
