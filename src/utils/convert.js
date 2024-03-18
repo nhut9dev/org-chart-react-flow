@@ -58,8 +58,8 @@ const calcVerticalD3Tree = (node, subRoots) => {
 		...node,
 		id: node.id,
 		size: sub
-			? [((sub.height + 1) * NODE.WIDTH) / 2, NODE.HEIGHT]
-			: [NODE.WIDTH, NODE.HEIGHT],
+			? [((sub.height + 1) * NODE.WIDTH) / 2, NODE.HEIGHT + 30]
+			: [NODE.WIDTH, NODE.HEIGHT + 30],
 		children:
 			node?.children && !sub
 				? node.children.map((c) => {
@@ -70,8 +70,8 @@ const calcVerticalD3Tree = (node, subRoots) => {
 };
 
 const calcSubRoot = (node, x = 0, y = 0, depth = 0) => {
-	const newX = x + NODE.WIDTH / 6;
-	const newY = y + NODE.HEIGHT * depth;
+	const newX = x + NODE.WIDTH / 4;
+	const newY = y + NODE.HEIGHT * depth + (depth ? 20 : 0);
 
 	let childrenDeep = 1;
 
@@ -85,7 +85,9 @@ const calcSubRoot = (node, x = 0, y = 0, depth = 0) => {
 			x: newX,
 			y: newY
 		},
-		...(node?.data ? {} : { data: { ...node, label: node.name } }),
+		...(node?.data
+			? {}
+			: { data: { ...node, label: node.name, isVerical: true } }),
 		...(node?.children || node?.data?.children
 			? {
 					children: (node?.children || node?.data?.children || []).map(
@@ -129,7 +131,7 @@ const getNodesList = (data, type = ORG_TYPE.VERTICAL) => {
 
 	const tree = d3FlexTree
 		.spacing(COMMON.SPACING)
-		.nodeSize([NODE.WIDTH, NODE.HEIGHT])
+		.nodeSize([NODE.WIDTH, NODE.HEIGHT + 30])
 		.hierarchy(horizontal);
 
 	d3FlexTree(tree).each((node) => {
